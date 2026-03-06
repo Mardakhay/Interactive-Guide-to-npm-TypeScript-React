@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frontend Dev — Deep Dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,500;0,700;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --bg2: #0e1318;
+  --bg3: #131a22;
+  --border: #1e2d3d;
+  --accent: #00e5ff;
+  --accent2: #ff6b35;
+  --accent3: #a8ff3e;
+  --text: #c9d4e0;
+  --text-dim: #5a7080;
+  --text-bright: #eaf2ff;
+  --code-bg: #060a0d;
+  --success: #00c97d;
+  --error: #ff4757;
+  --warn: #ffa502;
+  --npm: #cb3837;
+  --ts: #3178c6;
+  --react: #61dafb;
+  --purple: #bd93f9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+::selection { background: #00e5ff33; color: var(--accent); }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* SCANLINE EFFECT */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,12,16,0.95);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  padding: 0 2rem;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 2rem;
+}
+
+.logo {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo span { color: var(--text-dim); font-weight: 400; }
+
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.nav-tab {
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--border);
+}
+
+.nav-tab:last-child { border-right: none; }
+
+.nav-tab:hover { color: var(--text-bright); background: var(--bg3); }
+
+.nav-tab.active[data-tab="npm"] { background: #cb383722; color: #ff6b6b; border-bottom: 2px solid var(--npm); }
+.nav-tab.active[data-tab="typescript"] { background: #3178c622; color: #79b8ff; border-bottom: 2px solid var(--ts); }
+.nav-tab.active[data-tab="react"] { background: #61dafb22; color: var(--react); border-bottom: 2px solid var(--react); }
+
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  position: relative;
+  flex: 1;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  width: 0%;
+  transition: width 0.5s ease;
+  border-radius: 2px;
+}
+
+/* MAIN LAYOUT */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* SECTIONS */
+.section {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+
+.section.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* HERO BANNER */
+.hero {
+  padding: 3rem 0 2rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.badge-npm { background: #cb383722; color: #ff6b6b; border: 1px solid #cb383755; }
+.badge-ts { background: #3178c622; color: #79b8ff; border: 1px solid #3178c655; }
+.badge-react { background: #61dafb22; color: var(--react); border: 1px solid #61dafb55; }
+
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-bright);
+  margin-bottom: 0.75rem;
+}
+
+.hero p {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 600px;
+}
+
+.hero-icon {
+  font-size: 5rem;
+  opacity: 0.15;
+  filter: grayscale(1);
+}
+
+/* CONTENT CARDS */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.card-title .icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.icon-npm { background: #cb383722; }
+.icon-ts { background: #3178c622; }
+.icon-react { background: #61dafb22; }
+.icon-quiz { background: #ffa50222; }
+.icon-practice { background: #a8ff3e22; }
+.icon-info { background: #00e5ff22; }
+
+p, li { line-height: 1.75; color: var(--text); }
+
+.card p, .card li { margin-bottom: 0.6rem; }
+
+ul { padding-left: 1.2rem; }
+
+li::marker { color: var(--accent); }
+
+strong { color: var(--text-bright); font-weight: 600; }
+
+.highlight { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--bg3); padding: 0.1em 0.35em; border-radius: 4px; }
+
+/* CODE BLOCKS */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-lang {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.code-dots { display: flex; gap: 0.4rem; }
+.code-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-red { background: #ff5f57; }
+.dot-yellow { background: #febc2e; }
+.dot-green { background: #28c840; }
+
+.code-copy {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.code-copy:hover { color: var(--accent); border-color: var(--accent); }
+
+.code-content {
+  padding: 1.2rem 1.4rem;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+/* SYNTAX HIGHLIGHTING */
+.kw { color: #ff79c6; }
+.fn { color: #50fa7b; }
+.str { color: #f1fa8c; }
+.num { color: #bd93f9; }
+.cmt { color: #6272a4; font-style: italic; }
+.type { color: #8be9fd; }
+.op { color: var(--accent); }
+.tag { color: #ff79c6; }
+.attr { color: #50fa7b; }
+.val { color: #f1fa8c; }
+.prop { color: #8be9fd; }
+.var { color: var(--text-bright); }
+.pun { color: var(--text-dim); }
+.npm-c { color: #ff6b6b; }
+
+/* QUIZ */
+.quiz-card {
+  background: var(--bg2);
+  border: 1px solid #ffa50222;
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-question {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+}
+
+.quiz-options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.quiz-option {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text-bright);
+  background: #00e5ff0a;
+}
+
+.quiz-option .opt-letter {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.quiz-option.correct {
+  border-color: var(--success);
+  background: #00c97d15;
+  color: var(--success);
+}
+
+.quiz-option.correct .opt-letter { border-color: var(--success); color: var(--success); }
+
+.quiz-option.wrong {
+  border-color: var(--error);
+  background: #ff475715;
+  color: var(--error);
+}
+
+.quiz-option.wrong .opt-letter { border-color: var(--error); color: var(--error); }
+
+.quiz-option:disabled { cursor: default; }
+
+.quiz-feedback {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: none;
+}
+
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct-fb { background: #00c97d15; border: 1px solid #00c97d44; color: var(--success); }
+.quiz-feedback.wrong-fb { background: #ff475715; border: 1px solid #ff475744; color: #ff6b6b; }
+
+/* PRACTICE BLOCKS */
+.practice-card {
+  background: var(--bg2);
+  border: 1px solid #a8ff3e22;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.practice-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #a8ff3e22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.practice-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.practice-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+@media (max-width: 768px) {
+  .practice-body { grid-template-columns: 1fr; }
+}
+
+.practice-pane {
+  padding: 0;
+}
+
+.practice-pane-label {
+  padding: 0.5rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+
+.pane-js { color: var(--warn); border-right: 1px solid var(--border); }
+.pane-ts { color: #79b8ff; }
+
+.practice-editor {
+  min-height: 160px;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  background: var(--code-bg);
+  border: none;
+  outline: none;
+  color: var(--text);
+  resize: none;
+  width: 100%;
+  border-right: 1px solid var(--border);
+}
+
+.practice-editor:focus { outline: none; }
+
+.practice-answer {
+  min-height: 160px;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  background: var(--code-bg);
+  overflow-x: auto;
+}
+
+.practice-footer {
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 7px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { background: #00c4db; transform: translateY(-1px); }
+
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent3); color: var(--accent3); }
+
+.btn-reveal { background: #a8ff3e22; color: var(--accent3); border: 1px solid #a8ff3e44; }
+.btn-reveal:hover { background: #a8ff3e33; }
+
+.practice-result {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  display: none;
+}
+
+.practice-result.show { display: block; }
+.practice-result.pass { background: #00c97d15; color: var(--success); }
+.practice-result.fail { background: #ff475715; color: var(--error); }
+
+/* INFO BOX */
+.info-box {
+  background: #00e5ff0a;
+  border: 1px solid #00e5ff22;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.warn-box {
+  background: #ffa5020a;
+  border: 1px solid #ffa50222;
+  border-left: 3px solid var(--warn);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.success-box {
+  background: #00c97d0a;
+  border: 1px solid #00c97d22;
+  border-left: 3px solid var(--success);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+/* DIAGRAM / FLOW */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.flow-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-bright);
+}
+
+.flow-arrow {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+/* TABS */
+.sub-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  width: fit-content;
+}
+
+.sub-tab {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sub-tab:last-child { border-right: none; }
+.sub-tab.active { background: var(--bg3); color: var(--text-bright); }
+
+/* CHAPTER HEADER */
+.chapter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2.5rem 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chapter-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+}
+
+.chapter h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+}
+
+/* COMPARISON TABLE */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 1rem 0;
+}
+
+.table th {
+  background: var(--bg3);
+  color: var(--text-bright);
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+
+.table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+
+.table tr:hover td { background: #ffffff04; }
+
+.table .check { color: var(--success); font-weight: 700; }
+.table .cross { color: var(--error); }
+.table .warn-t { color: var(--warn); }
+
+/* SCORE BADGE */
+.score-display {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.score-num { font-family: 'JetBrains Mono', monospace; color: var(--accent3); font-weight: 700; font-size: 1rem; }
+
+/* GRID CARDS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* INLINE TERMINAL */
+.terminal {
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1rem 0;
+  border: 1px solid #1a2a1a;
+}
+
+.terminal-header {
+  background: #1a1a1a;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.terminal-title { font-size: 0.72rem; color: #666; font-family: 'JetBrains Mono', monospace; flex: 1; text-align: center; }
+
+.terminal-body {
+  padding: 1rem 1.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.t-prompt { color: var(--accent3); }
+.t-cmd { color: var(--text-bright); }
+.t-out { color: #888; }
+.t-success { color: var(--success); }
+.t-error { color: var(--error); }
+
+/* REACT COMPONENT VISUALIZER */
+.react-viz {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 200px;
+}
+
+.viz-code { padding: 1rem; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.7; }
+.viz-preview { padding: 1rem; background: white; color: #333; font-family: sans-serif; }
+.viz-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.5rem; }
+
+/* INTERACTIVE COUNTER DEMO */
+.demo-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.demo-counter {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--react);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.05em;
+}
+
+.demo-btns { display: flex; gap: 0.75rem; }
+
+.demo-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--react);
+  background: transparent;
+  color: var(--react);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.demo-btn:hover { background: var(--react); color: #000; transform: scale(1.1); }
+
+.demo-label { font-size: 0.78rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+/* STEP BY STEP */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.step.done .step-num { border-color: var(--accent); color: var(--accent); }
+
+.step-content { flex: 1; padding-top: 0.4rem; }
+.step-title { font-weight: 700; color: var(--text-bright); margin-bottom: 0.3rem; }
+
+/* TOGGLE SECTION */
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible-content { display: none; }
+.collapsible-content.open { display: block; }
+.toggle-icon { transition: transform 0.2s; display: inline-block; }
+.collapsible.open .toggle-icon { transform: rotate(90deg); }
+
+/* SECTION END */
+.section-end {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.section-end h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-bright); margin-bottom: 0.5rem; }
+.section-end p { color: var(--text-dim); font-size: 0.9rem; }
+.section-end .next-btn {
+  margin-top: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.section-end .next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,229,255,0.3); }
+
+/* TOOLTIP */
+.tooltip { position: relative; display: inline-block; }
+.tooltip .tip-text {
+  visibility: hidden; opacity: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-align: center;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  position: absolute;
+  z-index: 10;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.78rem;
+  transition: all 0.2s;
+}
+
+.tooltip:hover .tip-text { visibility: visible; opacity: 1; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">⌨ dev<span>/guide</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="npm" onclick="switchTab('npm')">npm</button>
+      <button class="nav-tab" data-tab="typescript" onclick="switchTab('typescript')">TypeScript</button>
+      <button class="nav-tab" data-tab="react" onclick="switchTab('react')">React</button>
+    </div>
+    <div class="progress-bar" style="max-width:200px">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+  </div>
+</header>
+
+<!-- SCORE -->
+<div class="score-display">
+  <span>🏆 Score:</span>
+  <span class="score-num" id="scoreNum">0</span>
+  <span style="color:var(--text-dim)">/</span>
+  <span class="score-num" id="totalNum">0</span>
+</div>
+
+<div class="main">
+
+<!-- ===== NPM SECTION ===== -->
+<div class="section active" id="section-npm">
+  <div class="hero">
+    <div>
+      <div class="hero-badge badge-npm">● Chapter 1</div>
+      <h1>npm &amp; Package<br>Managers</h1>
+      <p>Learn how to manage libraries, dependencies, and the building blocks that every JavaScript project depends on.</p>
+    </div>
+    <div class="hero-icon">📦</div>
+  </div>
+
+  <!-- CHAPTER 1 -->
+  <div class="chapter">
+    <span class="chapter-num">01</span>
+    <h2>What is a Package Manager?</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-info">💡</span>The Core Problem</div>
+    <p>Imagine you're building an app that needs to <strong>format dates</strong>. You have two choices:</p>
+    <ul>
+      <li><strong>Write it yourself</strong> — takes days, full of edge cases (timezones? leap years? 😰)</li>
+      <li><strong>Use someone else's library</strong> — working in seconds, battle-tested by thousands</li>
+    </ul>
+    <div class="info-box" style="margin-top:1rem">
+      A <strong>package</strong> (or library) is a reusable chunk of code someone published so you don't have to write it yourself. A <strong>package manager</strong> is the tool that downloads, installs, and manages those packages for you.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-npm">📦</span>Before Package Managers (the dark ages)</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Find the library website</div>
+          <p>Search Google, maybe it's on GitHub, maybe a random server...</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Download a zip file</div>
+          <p>Pray that the download link still works.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Manually copy files into your project</div>
+          <p>Don't forget that this library <em>depends on another library</em>... repeat.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Check for updates every month manually 😭</div>
+        </div>
+      </div>
+    </div>
+    <div class="success-box">
+      <strong>npm solves ALL of this</strong> with a single command. It downloads, tracks versions, resolves dependencies of dependencies, and verifies integrity automatically.
+    </div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">02</span>
+    <h2>The Three Big Players</h2>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Manager</th>
+        <th>Speed</th>
+        <th>Disk Space</th>
+        <th>Default?</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#ff6b6b">npm</strong></td>
+        <td class="warn-t">Medium</td>
+        <td class="warn-t">Large</td>
+        <td class="check">✓ Comes with Node.js</td>
+        <td>Starting out, universal</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f5a623">pnpm</strong></td>
+        <td class="check">Fast</td>
+        <td class="check">Small (symlinks)</td>
+        <td class="cross">Install separately</td>
+        <td>Monorepos, disk space</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#2188ff">Yarn</strong></td>
+        <td class="check">Fast</td>
+        <td class="warn-t">Medium</td>
+        <td class="cross">Install separately</td>
+        <td>Teams, workspaces</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    🎓 <strong>For learning:</strong> Use <strong>npm</strong>. It ships with Node.js and 99% of tutorials use it. Once you know the concepts, switching managers takes 10 minutes.
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">03</span>
+    <h2>Using npm — Hands On</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-npm">⚙</span>Step 1: Initialize a Project</div>
+    <p>Every project starts with <span class="highlight">package.json</span> — the project's "manifest" file. Create it with:</p>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="terminal-title">terminal</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm init -y</span></div>
+        <div class="t-out">Wrote to /my-project/package.json:</div>
+        <div class="t-out">{</div>
+        <div class="t-out">&nbsp;&nbsp;"name": "my-project",</div>
+        <div class="t-out">&nbsp;&nbsp;"version": "1.0.0",</div>
+        <div class="t-out">&nbsp;&nbsp;"scripts": {},</div>
+        <div class="t-out">&nbsp;&nbsp;"dependencies": {}</div>
+        <div class="t-out">}</div>
+        <div class="t-success">✓ Done!</div>
+      </div>
+    </div>
+    <p>The <span class="highlight">-y</span> flag means "yes to everything" — skips the Q&amp;A wizard.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-npm">⬇</span>Step 2: Install a Package</div>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="terminal-title">terminal</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm install date-fns</span></div>
+        <div class="t-out">added 1 package in 0.8s</div>
+        <div class="t-success">✓ package installed!</div>
+        <br>
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm install eslint --save-dev</span></div>
+        <div class="t-out">added 212 packages in 3.2s</div>
+        <div class="t-success">✓ dev dependency installed!</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:1rem">
+      <div class="info-box" style="margin:0">
+        <strong>dependency</strong><br>
+        <code style="font-size:0.82rem;font-family:JetBrains Mono">npm install &lt;name&gt;</code><br>
+        <span style="font-size:0.85rem">Needed when your app <em>runs</em>. Like <code style="font-size:0.82rem;font-family:JetBrains Mono">date-fns</code> for formatting dates.</span>
+      </div>
+      <div class="warn-box" style="margin:0">
+        <strong>devDependency</strong><br>
+        <code style="font-size:0.82rem;font-family:JetBrains Mono">npm install &lt;name&gt; --save-dev</code><br>
+        <span style="font-size:0.85rem">Only needed during development. Like <code style="font-size:0.82rem;font-family:JetBrains Mono">eslint</code> (code linter).</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-npm">📁</span>What npm creates in your project</div>
+    <div class="flow" style="flex-direction:column;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span style="color:var(--accent);font-family:JetBrains Mono;font-size:0.85rem">📄 package.json</span>
+        <span style="color:var(--text-dim);font-size:0.82rem">— Lists your dependencies &amp; their required versions</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span style="color:var(--accent2);font-family:JetBrains Mono;font-size:0.85rem">🔒 package-lock.json</span>
+        <span style="color:var(--text-dim);font-size:0.82rem">— The <strong>lock file</strong>: exact versions of every package installed</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span style="color:var(--text-dim);font-family:JetBrains Mono;font-size:0.85rem">📁 node_modules/</span>
+        <span style="color:var(--text-dim);font-size:0.82rem">— All downloaded packages. <strong>Never commit this!</strong></span>
+      </div>
+    </div>
+    <div class="warn-box">
+      ⚠️ <strong>Always commit your lock file</strong> (<span class="highlight">package-lock.json</span>) to git. This ensures everyone on your team installs the exact same package versions — preventing "works on my machine" bugs.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-npm">▶</span>npm Scripts — Your Task Runner</div>
+    <p>You can define shortcut commands in <span class="highlight">package.json</span> under <span class="highlight">"scripts"</span>:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">package.json</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="pun">{</span>
+  <span class="str">"scripts"</span><span class="pun">: {</span>
+    <span class="str">"start"</span><span class="pun">:</span> <span class="str">"node index.js"</span><span class="pun">,</span>
+    <span class="str">"dev"</span><span class="pun">:</span>   <span class="str">"parcel index.html"</span><span class="pun">,</span>
+    <span class="str">"build"</span><span class="pun">:</span> <span class="str">"webpack --mode production"</span><span class="pun">,</span>
+    <span class="str">"test"</span><span class="pun">:</span>  <span class="str">"jest"</span>
+  <span class="pun">}</span>
+<span class="pun">}</span></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="terminal-title">terminal</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm run dev</span>   <span class="t-out"># runs "parcel index.html"</span></div>
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm run build</span> <span class="t-out"># runs "webpack --mode production"</span></div>
+        <div><span class="t-prompt">$ </span><span class="t-cmd">npm start</span>     <span class="t-out"># special shortcut (no "run" needed)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">04</span>
+    <h2>What's a Bundler?</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-info">🎁</span>The Bundler Problem</div>
+    <p>Browsers can't directly understand npm packages. When you write:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">index.js</div>
+      </div>
+      <div class="code-content"><span class="kw">import</span> <span class="pun">{</span> <span class="var">format</span> <span class="pun">}</span> <span class="kw">from</span> <span class="str">'date-fns'</span><span class="pun">;</span>   <span class="cmt">// ← browser goes "Huh??"</span>
+<span class="kw">import</span> <span class="var">lodash</span> <span class="kw">from</span> <span class="str">'lodash'</span><span class="pun">;</span>           <span class="cmt">// ← browser still confused</span></div>
+    </div>
+    <p>A <strong>bundler</strong> takes all your source files + npm packages and combines them into one (or a few) files the browser can actually understand.</p>
+
+    <div class="flow" style="margin-top:1.2rem">
+      <div class="flow-box">📄 index.js<br><span style="color:var(--text-dim);font-size:0.75rem">your code</span></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-box">📦 node_modules<br><span style="color:var(--text-dim);font-size:0.75rem">3rd party</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent)">📦 Bundler<br><span style="color:var(--accent);font-size:0.75rem">Webpack/Vite/Parcel</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--success)">✅ bundle.js<br><span style="color:var(--success);font-size:0.75rem">browser ready</span></div>
+    </div>
+  </div>
+
+  <!-- QUIZ 1 -->
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — npm Basics</div>
+    <div id="q1" class="quiz-question">What command installs a package that's only needed during development (like a linter or test runner)?</div>
+    <div class="quiz-options" id="q1-opts">
+      <button class="quiz-option" onclick="checkQuiz('q1',this,false,'A')"><span class="opt-letter">A</span>npm install eslint</button>
+      <button class="quiz-option" onclick="checkQuiz('q1',this,true,'B')"><span class="opt-letter">B</span>npm install eslint --save-dev</button>
+      <button class="quiz-option" onclick="checkQuiz('q1',this,false,'C')"><span class="opt-letter">C</span>npm install eslint --global</button>
+      <button class="quiz-option" onclick="checkQuiz('q1',this,false,'D')"><span class="opt-letter">D</span>npm add-dev eslint</button>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Lock Files</div>
+    <div class="quiz-question">Why should you commit <code style="font-family:JetBrains Mono">package-lock.json</code> to git?</div>
+    <div class="quiz-options" id="q2-opts">
+      <button class="quiz-option" onclick="checkQuiz('q2',this,false,'A')"><span class="opt-letter">A</span>Because npm won't work without it in the repo</button>
+      <button class="quiz-option" onclick="checkQuiz('q2',this,false,'B')"><span class="opt-letter">B</span>It contains your secret API keys</button>
+      <button class="quiz-option" onclick="checkQuiz('q2',this,true,'C')"><span class="opt-letter">C</span>It ensures everyone on the team installs the exact same package versions</button>
+      <button class="quiz-option" onclick="checkQuiz('q2',this,false,'D')"><span class="opt-letter">D</span>To back up node_modules</button>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Bundlers</div>
+    <div class="quiz-question">Why do we need a bundler when building for the browser?</div>
+    <div class="quiz-options" id="q3-opts">
+      <button class="quiz-option" onclick="checkQuiz('q3',this,false,'A')"><span class="opt-letter">A</span>To compress images automatically</button>
+      <button class="quiz-option" onclick="checkQuiz('q3',this,true,'B')"><span class="opt-letter">B</span>Browsers can't directly use npm packages — a bundler combines them into browser-readable files</button>
+      <button class="quiz-option" onclick="checkQuiz('q3',this,false,'C')"><span class="opt-letter">C</span>Bundlers are only needed for TypeScript</button>
+      <button class="quiz-option" onclick="checkQuiz('q3',this,false,'D')"><span class="opt-letter">D</span>To install node_modules faster</button>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="section-end">
+    <h3>📦 npm Chapter Complete!</h3>
+    <p>You understand packages, managers, lock files, and bundlers. Ready for TypeScript?</p>
+    <button class="next-btn" onclick="switchTab('typescript')">Next: TypeScript →</button>
+  </div>
+</div>
+
+<!-- ===== TYPESCRIPT SECTION ===== -->
+<div class="section" id="section-typescript">
+  <div class="hero">
+    <div>
+      <div class="hero-badge badge-ts">● Chapter 2</div>
+      <h1>TypeScript &amp;<br>Static Typing</h1>
+      <p>JavaScript is flexible — sometimes too flexible. TypeScript adds types so your editor catches bugs before they reach users.</p>
+    </div>
+    <div class="hero-icon">🔷</div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">01</span>
+    <h2>The Problem TypeScript Solves</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-ts">💥</span>JavaScript's Hidden Traps</div>
+    <p>JavaScript is <strong>dynamically typed</strong> — variables can hold any type, and types can change at runtime. This causes sneaky bugs:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">JavaScript — the bug you won't see coming</div>
+      </div>
+      <div class="code-content"><span class="kw">function</span> <span class="fn">generateEmail</span><span class="pun">(</span><span class="var">user</span><span class="pun">) {</span>
+  <span class="kw">return</span> <span class="str">`<span class="pun">${</span><span class="var">user</span><span class="pun">.</span><span class="prop">name</span><span class="pun">}</span>@company.com`</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Developer calls it with wrong field name 👇</span>
+<span class="fn">generateEmail</span><span class="pun">({ </span><span class="prop">fullName</span><span class="pun">:</span> <span class="str">'Petro Nikolsky'</span> <span class="pun">});</span>
+<span class="cmt">// Returns: "undefined@company.com"  😱</span>
+<span class="cmt">// No error! Bug silently goes to production!</span></div>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">TypeScript — caught before it runs</div>
+      </div>
+      <div class="code-content"><span class="kw">function</span> <span class="fn">generateEmail</span><span class="pun">(</span><span class="var">user</span><span class="pun">: {</span> <span class="prop">name</span><span class="pun">:</span> <span class="type">string</span> <span class="pun">}) {</span>
+  <span class="kw">return</span> <span class="str">`<span class="pun">${</span><span class="var">user</span><span class="pun">.</span><span class="prop">name</span><span class="pun">}</span>@company.com`</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="fn">generateEmail</span><span class="pun">({ </span><span class="prop">fullName</span><span class="pun">:</span> <span class="str">'Petro Nikolsky'</span> <span class="pun">});</span>
+<span class="cmt">// ❌ ERROR at compile time:</span>
+<span class="cmt">// Property 'fullName' does not exist on type '{ name: string }'</span>
+<span class="cmt">// You fix it BEFORE it ships! ✅</span></div>
+    </div>
+    <div class="info-box">
+      🕐 <strong>The earlier you catch a bug, the cheaper it is to fix.</strong> TypeScript catches type errors at <em>write time</em> — right in your editor, before you even run the code.
+    </div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">02</span>
+    <h2>TypeScript Syntax — The Essentials</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-ts">📝</span>Typing Variables</div>
+    <p>Add a type after a colon <span class="highlight">: type</span></p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">TypeScript</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="cmt">// Basic types</span>
+<span class="kw">let</span> <span class="var">age</span><span class="pun">:</span> <span class="type">number</span> <span class="op">=</span> <span class="num">25</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">name</span><span class="pun">:</span> <span class="type">string</span> <span class="op">=</span> <span class="str">'Alice'</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">isAdmin</span><span class="pun">:</span> <span class="type">boolean</span> <span class="op">=</span> <span class="kw">false</span><span class="pun">;</span>
+
+<span class="cmt">// Arrays</span>
+<span class="kw">let</span> <span class="var">scores</span><span class="pun">:</span> <span class="type">number</span><span class="pun">[]</span> <span class="op">=</span> <span class="pun">[</span><span class="num">95</span><span class="pun">,</span> <span class="num">87</span><span class="pun">,</span> <span class="num">92</span><span class="pun">];</span>
+<span class="kw">let</span> <span class="var">tags</span><span class="pun">:</span> <span class="type">string</span><span class="pun">[]</span> <span class="op">=</span> <span class="pun">[</span><span class="str">'frontend'</span><span class="pun">,</span> <span class="str">'react'</span><span class="pun">];</span>
+
+<span class="cmt">// TypeScript can also INFER types — you don't always need to write them!</span>
+<span class="kw">let</span> <span class="var">city</span> <span class="op">=</span> <span class="str">'Berlin'</span><span class="pun">;</span>  <span class="cmt">// TypeScript knows this is a string</span>
+<span class="var">city</span> <span class="op">=</span> <span class="num">42</span><span class="pun">;</span>            <span class="cmt">// ❌ ERROR: Type 'number' is not assignable to type 'string'</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-ts">⚙</span>Typing Functions</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">TypeScript</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="cmt">// Parameter types + return type</span>
+<span class="kw">function</span> <span class="fn">add</span><span class="pun">(</span><span class="var">a</span><span class="pun">:</span> <span class="type">number</span><span class="pun">,</span> <span class="var">b</span><span class="pun">:</span> <span class="type">number</span><span class="pun">):</span> <span class="type">number</span> <span class="pun">{</span>
+  <span class="kw">return</span> <span class="var">a</span> <span class="op">+</span> <span class="var">b</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Arrow function with types</span>
+<span class="kw">const</span> <span class="fn">greet</span> <span class="op">=</span> <span class="pun">(</span><span class="var">name</span><span class="pun">:</span> <span class="type">string</span><span class="pun">):</span> <span class="type">string</span> <span class="op">=></span> <span class="pun">{</span>
+  <span class="kw">return</span> <span class="str">`Hello, <span class="pun">${</span><span class="var">name</span><span class="pun">}</span>!`</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="cmt">// void = function returns nothing</span>
+<span class="kw">function</span> <span class="fn">log</span><span class="pun">(</span><span class="var">message</span><span class="pun">:</span> <span class="type">string</span><span class="pun">):</span> <span class="type">void</span> <span class="pun">{</span>
+  <span class="var">console</span><span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="var">message</span><span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-ts">🏗</span>Interfaces — Defining Object Shapes</div>
+    <p>An <strong>interface</strong> is like a contract — it describes what properties an object must have.</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">TypeScript</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="kw">interface</span> <span class="type">User</span> <span class="pun">{</span>
+  <span class="prop">id</span><span class="pun">:</span> <span class="type">number</span><span class="pun">;</span>
+  <span class="prop">name</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">email</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">age</span><span class="pun">?:</span> <span class="type">number</span><span class="pun">;</span>    <span class="cmt">// ? means optional</span>
+<span class="pun">}</span>
+
+<span class="kw">function</span> <span class="fn">displayUser</span><span class="pun">(</span><span class="var">user</span><span class="pun">:</span> <span class="type">User</span><span class="pun">):</span> <span class="type">void</span> <span class="pun">{</span>
+  <span class="var">console</span><span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="str">`<span class="pun">${</span><span class="var">user</span><span class="pun">.</span><span class="prop">name</span><span class="pun">}</span> — <span class="pun">${</span><span class="var">user</span><span class="pun">.</span><span class="prop">email</span><span class="pun">}</span>`</span><span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// ✅ Valid</span>
+<span class="fn">displayUser</span><span class="pun">({ </span><span class="prop">id</span><span class="pun">:</span> <span class="num">1</span><span class="pun">,</span> <span class="prop">name</span><span class="pun">:</span> <span class="str">'Alice'</span><span class="pun">,</span> <span class="prop">email</span><span class="pun">:</span> <span class="str">'alice@dev.com'</span> <span class="pun">});</span>
+
+<span class="cmt">// ❌ Error: missing 'email'</span>
+<span class="fn">displayUser</span><span class="pun">({ </span><span class="prop">id</span><span class="pun">:</span> <span class="num">2</span><span class="pun">,</span> <span class="prop">name</span><span class="pun">:</span> <span class="str">'Bob'</span> <span class="pun">});</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-ts">🔀</span>Union Types — "This OR That"</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">TypeScript</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="cmt">// id can be a string OR a number (common with APIs!)</span>
+<span class="kw">let</span> <span class="var">id</span><span class="pun">:</span> <span class="type">string</span> <span class="op">|</span> <span class="type">number</span><span class="pun">;</span>
+
+<span class="var">id</span> <span class="op">=</span> <span class="num">42</span><span class="pun">;</span>        <span class="cmt">// ✅</span>
+<span class="var">id</span> <span class="op">=</span> <span class="str">'abc123'</span><span class="pun">;</span>  <span class="cmt">// ✅</span>
+<span class="var">id</span> <span class="op">=</span> <span class="kw">true</span><span class="pun">;</span>      <span class="cmt">// ❌ Error!</span>
+
+<span class="cmt">// Status can only be one of these exact strings</span>
+<span class="kw">type</span> <span class="type">Status</span> <span class="op">=</span> <span class="str">'loading'</span> <span class="op">|</span> <span class="str">'success'</span> <span class="op">|</span> <span class="str">'error'</span><span class="pun">;</span>
+
+<span class="kw">let</span> <span class="var">status</span><span class="pun">:</span> <span class="type">Status</span> <span class="op">=</span> <span class="str">'loading'</span><span class="pun">;</span>  <span class="cmt">// ✅</span>
+<span class="var">status</span> <span class="op">=</span> <span class="str">'pending'</span><span class="pun">;</span>             <span class="cmt">// ❌ Not in the union!</span></div>
+    </div>
+  </div>
+
+  <!-- PRACTICE BLOCKS -->
+  <div class="chapter">
+    <span class="chapter-num">03</span>
+    <h2>Practice: Convert JS → TypeScript</h2>
+  </div>
+
+  <div class="practice-card">
+    <div class="practice-header">
+      <div class="practice-title">✏️ Exercise 1 — Add types to variables</div>
+      <span style="font-size:0.78rem;color:var(--text-dim)">Type in the right panel, then reveal answer</span>
+    </div>
+    <div class="practice-body">
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-js">JavaScript (given)</div>
+        <div class="practice-answer" style="border-right:1px solid var(--border)"><span class="kw">let</span> <span class="var">username</span> <span class="op">=</span> <span class="str">'john_doe'</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">score</span> <span class="op">=</span> <span class="num">0</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">isLoggedIn</span> <span class="op">=</span> <span class="kw">false</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">items</span> <span class="op">=</span> <span class="pun">[];</span>
+
+<span class="kw">function</span> <span class="fn">getScore</span><span class="pun">(</span><span class="var">player</span><span class="pun">) {</span>
+  <span class="kw">return</span> <span class="var">player</span><span class="pun">.</span><span class="prop">score</span><span class="pun">;</span>
+<span class="pun">}</span></div>
+      </div>
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-ts">Your TypeScript (type here)</div>
+        <textarea class="practice-editor" id="ex1-input" spellcheck="false" placeholder="// Add type annotations...
+let username: string = 'john_doe';
+// ..."></textarea>
+      </div>
+    </div>
+    <div class="practice-footer">
+      <button class="btn btn-reveal" onclick="toggleAnswer('ex1')">👁 Reveal Answer</button>
+      <div class="practice-result" id="ex1-result"></div>
+    </div>
+    <div id="ex1-answer" style="display:none">
+      <div class="practice-pane-label pane-ts" style="border-top:1px solid var(--border)">✅ Answer</div>
+      <div class="practice-answer" style="padding:1rem 1.4rem"><span class="kw">let</span> <span class="var">username</span><span class="pun">:</span> <span class="type">string</span> <span class="op">=</span> <span class="str">'john_doe'</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">score</span><span class="pun">:</span> <span class="type">number</span> <span class="op">=</span> <span class="num">0</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">isLoggedIn</span><span class="pun">:</span> <span class="type">boolean</span> <span class="op">=</span> <span class="kw">false</span><span class="pun">;</span>
+<span class="kw">let</span> <span class="var">items</span><span class="pun">:</span> <span class="type">string</span><span class="pun">[]</span> <span class="op">=</span> <span class="pun">[];</span>  <span class="cmt">// or number[] depending on what you'll store</span>
+
+<span class="kw">interface</span> <span class="type">Player</span> <span class="pun">{</span>
+  <span class="prop">name</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">score</span><span class="pun">:</span> <span class="type">number</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="kw">function</span> <span class="fn">getScore</span><span class="pun">(</span><span class="var">player</span><span class="pun">:</span> <span class="type">Player</span><span class="pun">):</span> <span class="type">number</span> <span class="pun">{</span>
+  <span class="kw">return</span> <span class="var">player</span><span class="pun">.</span><span class="prop">score</span><span class="pun">;</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="practice-card">
+    <div class="practice-header">
+      <div class="practice-title">✏️ Exercise 2 — Define an interface</div>
+    </div>
+    <div class="practice-body">
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-js">JavaScript (given)</div>
+        <div class="practice-answer" style="border-right:1px solid var(--border)"><span class="cmt">// A product object with:</span>
+<span class="cmt">// - id (number)</span>
+<span class="cmt">// - name (string)</span>
+<span class="cmt">// - price (number)</span>
+<span class="cmt">// - inStock (boolean)</span>
+<span class="cmt">// - category (optional string)</span>
+
+<span class="kw">function</span> <span class="fn">displayProduct</span><span class="pun">(</span><span class="var">product</span><span class="pun">) {</span>
+  <span class="var">console</span><span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="var">product</span><span class="pun">.</span><span class="prop">name</span><span class="pun">);</span>
+<span class="pun">}</span></div>
+      </div>
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-ts">Your TypeScript</div>
+        <textarea class="practice-editor" id="ex2-input" spellcheck="false" placeholder="interface Product {
+  // fill in fields...
+}
+
+function displayProduct(product: Product): void {
+  ...
+}"></textarea>
+      </div>
+    </div>
+    <div class="practice-footer">
+      <button class="btn btn-reveal" onclick="toggleAnswer('ex2')">👁 Reveal Answer</button>
+    </div>
+    <div id="ex2-answer" style="display:none">
+      <div class="practice-pane-label pane-ts" style="border-top:1px solid var(--border)">✅ Answer</div>
+      <div class="practice-answer" style="padding:1rem 1.4rem"><span class="kw">interface</span> <span class="type">Product</span> <span class="pun">{</span>
+  <span class="prop">id</span><span class="pun">:</span> <span class="type">number</span><span class="pun">;</span>
+  <span class="prop">name</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">price</span><span class="pun">:</span> <span class="type">number</span><span class="pun">;</span>
+  <span class="prop">inStock</span><span class="pun">:</span> <span class="type">boolean</span><span class="pun">;</span>
+  <span class="prop">category</span><span class="pun">?:</span> <span class="type">string</span><span class="pun">;</span>  <span class="cmt">// ? = optional</span>
+<span class="pun">}</span>
+
+<span class="kw">function</span> <span class="fn">displayProduct</span><span class="pun">(</span><span class="var">product</span><span class="pun">:</span> <span class="type">Product</span><span class="pun">):</span> <span class="type">void</span> <span class="pun">{</span>
+  <span class="var">console</span><span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="var">product</span><span class="pun">.</span><span class="prop">name</span><span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="practice-card">
+    <div class="practice-header">
+      <div class="practice-title">✏️ Exercise 3 — Union types &amp; type aliases</div>
+    </div>
+    <div class="practice-body">
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-js">Requirement</div>
+        <div class="practice-answer" style="border-right:1px solid var(--border)"><span class="cmt">// 1. Create a type alias "Direction"</span>
+<span class="cmt">//    that can only be:</span>
+<span class="cmt">//    'north' | 'south' | 'east' | 'west'</span>
+
+<span class="cmt">// 2. Create a type alias "ID"</span>
+<span class="cmt">//    that's either string or number</span>
+
+<span class="cmt">// 3. Write a function "move" that takes:</span>
+<span class="cmt">//    - steps: number</span>
+<span class="cmt">//    - direction: Direction</span>
+<span class="cmt">//    and returns void</span></div>
+      </div>
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-ts">Your TypeScript</div>
+        <textarea class="practice-editor" id="ex3-input" spellcheck="false" placeholder="type Direction = ...
+
+type ID = ...
+
+function move(...) {
+  ...
+}"></textarea>
+      </div>
+    </div>
+    <div class="practice-footer">
+      <button class="btn btn-reveal" onclick="toggleAnswer('ex3')">👁 Reveal Answer</button>
+    </div>
+    <div id="ex3-answer" style="display:none">
+      <div class="practice-pane-label pane-ts" style="border-top:1px solid var(--border)">✅ Answer</div>
+      <div class="practice-answer" style="padding:1rem 1.4rem"><span class="kw">type</span> <span class="type">Direction</span> <span class="op">=</span> <span class="str">'north'</span> <span class="op">|</span> <span class="str">'south'</span> <span class="op">|</span> <span class="str">'east'</span> <span class="op">|</span> <span class="str">'west'</span><span class="pun">;</span>
+
+<span class="kw">type</span> <span class="type">ID</span> <span class="op">=</span> <span class="type">string</span> <span class="op">|</span> <span class="type">number</span><span class="pun">;</span>
+
+<span class="kw">function</span> <span class="fn">move</span><span class="pun">(</span><span class="var">steps</span><span class="pun">:</span> <span class="type">number</span><span class="pun">,</span> <span class="var">direction</span><span class="pun">:</span> <span class="type">Direction</span><span class="pun">):</span> <span class="type">void</span> <span class="pun">{</span>
+  <span class="var">console</span><span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="str">`Moving <span class="pun">${</span><span class="var">steps</span><span class="pun">}</span> steps <span class="pun">${</span><span class="var">direction</span><span class="pun">}</span>`</span><span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Usage</span>
+<span class="fn">move</span><span class="pun">(</span><span class="num">5</span><span class="pun">,</span> <span class="str">'north'</span><span class="pun">);</span>    <span class="cmt">// ✅</span>
+<span class="fn">move</span><span class="pun">(</span><span class="num">3</span><span class="pun">,</span> <span class="str">'diagonal'</span><span class="pun">);</span> <span class="cmt">// ❌ Type error!</span></div>
+    </div>
+  </div>
+
+  <!-- TS QUIZ -->
+  <div class="chapter">
+    <span class="chapter-num">04</span>
+    <h2>TypeScript Quiz</h2>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Type Inference</div>
+    <div class="quiz-question">What does TypeScript infer as the type of <code style="font-family:JetBrains Mono">const x = 5</code>?</div>
+    <div class="quiz-options" id="q4-opts">
+      <button class="quiz-option" onclick="checkQuiz('q4',this,false,'A')"><span class="opt-letter">A</span>any</button>
+      <button class="quiz-option" onclick="checkQuiz('q4',this,true,'B')"><span class="opt-letter">B</span>number</button>
+      <button class="quiz-option" onclick="checkQuiz('q4',this,false,'C')"><span class="opt-letter">C</span>integer</button>
+      <button class="quiz-option" onclick="checkQuiz('q4',this,false,'D')"><span class="opt-letter">D</span>unknown</button>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Optional Properties</div>
+    <div class="quiz-question">In an interface, how do you mark a property as optional?</div>
+    <div class="quiz-options" id="q5-opts">
+      <button class="quiz-option" onclick="checkQuiz('q5',this,false,'A')"><span class="opt-letter">A</span><code style="font-family:JetBrains Mono">name: string | null</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q5',this,false,'B')"><span class="opt-letter">B</span><code style="font-family:JetBrains Mono">optional name: string</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q5',this,true,'C')"><span class="opt-letter">C</span><code style="font-family:JetBrains Mono">name?: string</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q5',this,false,'D')"><span class="opt-letter">D</span><code style="font-family:JetBrains Mono">name: maybe&lt;string&gt;</code></button>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Union Types</div>
+    <div class="quiz-question">Which declaration allows a variable to hold either a string or a number?</div>
+    <div class="quiz-options" id="q6-opts">
+      <button class="quiz-option" onclick="checkQuiz('q6',this,false,'A')"><span class="opt-letter">A</span><code style="font-family:JetBrains Mono">let x: string &amp; number</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q6',this,true,'B')"><span class="opt-letter">B</span><code style="font-family:JetBrains Mono">let x: string | number</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q6',this,false,'C')"><span class="opt-letter">C</span><code style="font-family:JetBrains Mono">let x: [string, number]</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q6',this,false,'D')"><span class="opt-letter">D</span><code style="font-family:JetBrains Mono">let x: any</code></button>
+    </div>
+    <div class="quiz-feedback" id="q6-fb"></div>
+  </div>
+
+  <div class="section-end">
+    <h3>🔷 TypeScript Chapter Complete!</h3>
+    <p>You now understand types, interfaces, unions, and type inference. Time for React!</p>
+    <button class="next-btn" onclick="switchTab('react')">Next: React →</button>
+  </div>
+</div>
+
+<!-- ===== REACT SECTION ===== -->
+<div class="section" id="section-react">
+  <div class="hero">
+    <div>
+      <div class="hero-badge badge-react">● Chapter 3</div>
+      <h1>React &amp; UI<br>Components</h1>
+      <p>React is a JavaScript library for building user interfaces. It lets you build complex UIs from small, reusable pieces called components.</p>
+    </div>
+    <div class="hero-icon">⚛</div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">01</span>
+    <h2>Why React?</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">🤔</span>The Problem React Solves</div>
+    <p>Imagine a "likes" button. Without React, you'd write something like this:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">Vanilla JS — messy DOM manipulation</div>
+      </div>
+      <div class="code-content"><span class="kw">let</span> <span class="var">likes</span> <span class="op">=</span> <span class="num">0</span><span class="pun">;</span>
+<span class="kw">const</span> <span class="var">btn</span> <span class="op">=</span> <span class="var">document</span><span class="pun">.</span><span class="fn">getElementById</span><span class="pun">(</span><span class="str">'like-btn'</span><span class="pun">);</span>
+<span class="kw">const</span> <span class="var">counter</span> <span class="op">=</span> <span class="var">document</span><span class="pun">.</span><span class="fn">getElementById</span><span class="pun">(</span><span class="str">'like-count'</span><span class="pun">);</span>
+
+<span class="var">btn</span><span class="pun">.</span><span class="fn">addEventListener</span><span class="pun">(</span><span class="str">'click'</span><span class="pun">, () => {</span>
+  <span class="var">likes</span><span class="op">++</span><span class="pun">;</span>
+  <span class="var">counter</span><span class="pun">.</span><span class="prop">textContent</span> <span class="op">=</span> <span class="var">likes</span><span class="pun">;</span>           <span class="cmt">// manually update DOM</span>
+  <span class="kw">if</span> <span class="pun">(</span><span class="var">likes</span> <span class="op">></span> <span class="num">0</span><span class="pun">)</span> <span class="var">btn</span><span class="pun">.</span><span class="prop">classList</span><span class="pun">.</span><span class="fn">add</span><span class="pun">(</span><span class="str">'liked'</span><span class="pun">);</span>  <span class="cmt">// manually update style</span>
+  <span class="cmt">// now imagine 100 features like this... 😫</span>
+<span class="pun">});</span></div>
+    </div>
+
+    <p style="margin-top:1rem">With React, you just describe <em>what the UI should look like</em> based on <strong>state</strong>, and React handles the DOM updates for you:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">React — declarative &amp; clean</div>
+      </div>
+      <div class="code-content"><span class="kw">function</span> <span class="fn">LikeButton</span><span class="pun">() {</span>
+  <span class="kw">const</span> <span class="pun">[</span><span class="var">likes</span><span class="pun">,</span> <span class="var">setLikes</span><span class="pun">]</span> <span class="op">=</span> <span class="fn">useState</span><span class="pun">(</span><span class="num">0</span><span class="pun">);</span>
+
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;button</span> <span class="attr">onClick</span><span class="pun">={() =></span> <span class="fn">setLikes</span><span class="pun">(</span><span class="var">likes</span> <span class="op">+</span> <span class="num">1</span><span class="pun">)}</span><span class="tag">&gt;</span>
+      ❤ <span class="pun">{</span><span class="var">likes</span><span class="pun">}</span> Likes
+    <span class="tag">&lt;/button&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span>
+<span class="cmt">// React automatically re-renders when likes changes ✨</span></div>
+    </div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">02</span>
+    <h2>The Core Concepts</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">🧩</span>Components — Building Blocks</div>
+    <p>Everything in React is a <strong>component</strong> — a JavaScript function that returns UI (written in JSX).</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">React Components</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="cmt">// A component is just a function that returns JSX</span>
+<span class="kw">function</span> <span class="fn">Greeting</span><span class="pun">() {</span>
+  <span class="kw">return</span> <span class="tag">&lt;h1&gt;</span>Hello, World!<span class="tag">&lt;/h1&gt;</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Components can receive data via "props"</span>
+<span class="kw">function</span> <span class="fn">UserCard</span><span class="pun">({</span> <span class="var">name</span><span class="pun">,</span> <span class="var">role</span> <span class="pun">}) {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;h2&gt;</span><span class="pun">{</span><span class="var">name</span><span class="pun">}</span><span class="tag">&lt;/h2&gt;</span>
+      <span class="tag">&lt;p&gt;</span><span class="pun">{</span><span class="var">role</span><span class="pun">}</span><span class="tag">&lt;/p&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Use components like HTML tags</span>
+<span class="kw">function</span> <span class="fn">App</span><span class="pun">() {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;UserCard</span> <span class="attr">name</span><span class="pun">=</span><span class="str">"Alice"</span> <span class="attr">role</span><span class="pun">=</span><span class="str">"Developer"</span> <span class="tag">/&gt;</span>
+      <span class="tag">&lt;UserCard</span> <span class="attr">name</span><span class="pun">=</span><span class="str">"Bob"</span>   <span class="attr">role</span><span class="pun">=</span><span class="str">"Designer"</span>   <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+    <div class="info-box">
+      JSX looks like HTML but it's actually JavaScript. <span class="highlight">{curly braces}</span> let you escape into JavaScript anywhere inside JSX.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">🔄</span>State — Data that Changes</div>
+    <p><strong>State</strong> is data that belongs to a component and can change over time. When state changes, React <em>automatically</em> re-renders the component.</p>
+
+    <!-- LIVE COUNTER DEMO -->
+    <div class="demo-box">
+      <div class="demo-label">⚛ Live React-style Counter Demo</div>
+      <div class="demo-counter" id="counter-display">0</div>
+      <div class="demo-btns">
+        <button class="demo-btn" onclick="updateCounter(-1)">−</button>
+        <button class="demo-btn" onclick="updateCounter(1)">+</button>
+      </div>
+      <div class="demo-label" id="counter-msg">State: <span id="counter-state">0</span> → React re-renders automatically</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">useState Hook</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="kw">import</span> <span class="pun">{</span> <span class="var">useState</span> <span class="pun">}</span> <span class="kw">from</span> <span class="str">'react'</span><span class="pun">;</span>
+
+<span class="kw">function</span> <span class="fn">Counter</span><span class="pun">() {</span>
+  <span class="cmt">// useState(0) → initial value is 0</span>
+  <span class="cmt">// count  → current value (read-only!)</span>
+  <span class="cmt">// setCount → function to update it</span>
+  <span class="kw">const</span> <span class="pun">[</span><span class="var">count</span><span class="pun">,</span> <span class="var">setCount</span><span class="pun">]</span> <span class="op">=</span> <span class="fn">useState</span><span class="pun">(</span><span class="num">0</span><span class="pun">);</span>
+
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;p&gt;</span>Count: <span class="pun">{</span><span class="var">count</span><span class="pun">}</span><span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span><span class="pun">={() =></span> <span class="fn">setCount</span><span class="pun">(</span><span class="var">count</span> <span class="op">+</span> <span class="num">1</span><span class="pun">)}</span><span class="tag">&gt;</span>+<span class="tag">&lt;/button&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span><span class="pun">={() =></span> <span class="fn">setCount</span><span class="pun">(</span><span class="var">count</span> <span class="op">-</span> <span class="num">1</span><span class="pun">)}</span><span class="tag">&gt;</span>-<span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+    <div class="warn-box">
+      ⚠️ <strong>Never modify state directly!</strong> Always use the setter function.<br>
+      <code style="font-size:0.82rem;font-family:JetBrains Mono">count = count + 1</code> ❌ — React won't know it changed<br>
+      <code style="font-size:0.82rem;font-family:JetBrains Mono">setCount(count + 1)</code> ✅ — React re-renders correctly
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">📩</span>Props — Passing Data Down</div>
+    <p>Props are how components <strong>communicate</strong>. A parent component passes data to children via props (like HTML attributes).</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">Props Example</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="cmt">// Child component — receives props</span>
+<span class="kw">function</span> <span class="fn">Badge</span><span class="pun">({</span> <span class="var">text</span><span class="pun">,</span> <span class="var">color</span> <span class="pun">= </span><span class="str">'blue'</span> <span class="pun">}) {</span>  <span class="cmt">// default value!</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;span</span> <span class="attr">style</span><span class="pun">={{</span> <span class="prop">background</span><span class="pun">:</span> <span class="var">color</span> <span class="pun">}}</span><span class="tag">&gt;</span>
+      <span class="pun">{</span><span class="var">text</span><span class="pun">}</span>
+    <span class="tag">&lt;/span&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Parent component — passes props</span>
+<span class="kw">function</span> <span class="fn">App</span><span class="pun">() {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;Badge</span> <span class="attr">text</span><span class="pun">=</span><span class="str">"New"</span>  <span class="attr">color</span><span class="pun">=</span><span class="str">"green"</span> <span class="tag">/&gt;</span>
+      <span class="tag">&lt;Badge</span> <span class="attr">text</span><span class="pun">=</span><span class="str">"Hot"</span>  <span class="attr">color</span><span class="pun">=</span><span class="str">"red"</span>   <span class="tag">/&gt;</span>
+      <span class="tag">&lt;Badge</span> <span class="attr">text</span><span class="pun">=</span><span class="str">"Sale"</span>  <span class="tag">/&gt;</span>  <span class="cmt">{/* uses default color='blue' */}</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">🔁</span>Rendering Lists</div>
+    <p>To render a list of items, use JavaScript's <span class="highlight">.map()</span> method inside JSX:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">Lists in React</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="kw">const</span> <span class="var">fruits</span> <span class="op">=</span> <span class="pun">[</span><span class="str">'🍎 Apple'</span><span class="pun">,</span> <span class="str">'🍌 Banana'</span><span class="pun">,</span> <span class="str">'🍊 Orange'</span><span class="pun">];</span>
+
+<span class="kw">function</span> <span class="fn">FruitList</span><span class="pun">() {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;ul&gt;</span>
+      <span class="pun">{</span><span class="var">fruits</span><span class="pun">.</span><span class="fn">map</span><span class="pun">((</span><span class="var">fruit</span><span class="pun">,</span> <span class="var">index</span><span class="pun">) =></span> <span class="pun">(</span>
+        <span class="tag">&lt;li</span> <span class="attr">key</span><span class="pun">={</span><span class="var">index</span><span class="pun">}</span><span class="tag">&gt;</span><span class="pun">{</span><span class="var">fruit</span><span class="pun">}</span><span class="tag">&lt;/li&gt;</span>
+        <span class="cmt">// key= is required! React uses it to track items</span>
+      <span class="pun">))}</span>
+    <span class="tag">&lt;/ul&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">🌐</span>useEffect — Side Effects</div>
+    <p>Want to fetch data when a component loads? Or run code when something changes? Use <span class="highlight">useEffect</span>:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">useEffect Hook</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="kw">import</span> <span class="pun">{</span> <span class="var">useState</span><span class="pun">,</span> <span class="var">useEffect</span> <span class="pun">}</span> <span class="kw">from</span> <span class="str">'react'</span><span class="pun">;</span>
+
+<span class="kw">function</span> <span class="fn">UserProfile</span><span class="pun">({</span> <span class="var">userId</span> <span class="pun">}) {</span>
+  <span class="kw">const</span> <span class="pun">[</span><span class="var">user</span><span class="pun">,</span> <span class="var">setUser</span><span class="pun">]</span> <span class="op">=</span> <span class="fn">useState</span><span class="pun">(</span><span class="kw">null</span><span class="pun">);</span>
+
+  <span class="fn">useEffect</span><span class="pun">(() => {</span>
+    <span class="cmt">// Runs after the component renders</span>
+    <span class="fn">fetch</span><span class="pun">(</span><span class="str">`/api/users/<span class="pun">${</span><span class="var">userId</span><span class="pun">}</span>`</span><span class="pun">)</span>
+      <span class="pun">.</span><span class="fn">then</span><span class="pun">(</span><span class="var">res</span> <span class="op">=></span> <span class="var">res</span><span class="pun">.</span><span class="fn">json</span><span class="pun">())</span>
+      <span class="pun">.</span><span class="fn">then</span><span class="pun">(</span><span class="var">data</span> <span class="op">=></span> <span class="fn">setUser</span><span class="pun">(</span><span class="var">data</span><span class="pun">));</span>
+  <span class="pun">},</span> <span class="pun">[</span><span class="var">userId</span><span class="pun">]);</span>  <span class="cmt">// ← dependency array: re-run when userId changes</span>
+
+  <span class="kw">if</span> <span class="pun">(!</span><span class="var">user</span><span class="pun">)</span> <span class="kw">return</span> <span class="tag">&lt;p&gt;</span>Loading...<span class="tag">&lt;/p&gt;</span><span class="pun">;</span>
+
+  <span class="kw">return</span> <span class="tag">&lt;h1&gt;</span><span class="pun">{</span><span class="var">user</span><span class="pun">.</span><span class="prop">name</span><span class="pun">}</span><span class="tag">&lt;/h1&gt;</span><span class="pun">;</span>
+<span class="pun">}</span></div>
+    </div>
+    <div class="info-box">
+      <strong>The dependency array <span class="highlight">[]</span> controls when the effect runs:</strong><br>
+      • <span class="highlight">[]</span> empty — run once when component mounts (like page load)<br>
+      • <span class="highlight">[userId]</span> — re-run whenever <code style="font-size:0.85em;font-family:JetBrains Mono">userId</code> changes<br>
+      • no array — run after <em>every</em> render (usually too much!)
+    </div>
+  </div>
+
+  <div class="chapter">
+    <span class="chapter-num">03</span>
+    <h2>React + TypeScript Together</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon icon-react">💎</span>Typing Props with TypeScript</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+        <div class="code-lang">React + TypeScript</div>
+        <button class="code-copy" onclick="copyCode(this)">copy</button>
+      </div>
+      <div class="code-content"><span class="kw">import</span> <span class="pun">{</span> <span class="var">useState</span> <span class="pun">}</span> <span class="kw">from</span> <span class="str">'react'</span><span class="pun">;</span>
+
+<span class="cmt">// Define the shape of props</span>
+<span class="kw">interface</span> <span class="type">ButtonProps</span> <span class="pun">{</span>
+  <span class="prop">label</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">onClick</span><span class="pun">:</span> <span class="pun">() =></span> <span class="type">void</span><span class="pun">;</span>
+  <span class="prop">disabled</span><span class="pun">?:</span> <span class="type">boolean</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Type the props parameter</span>
+<span class="kw">function</span> <span class="fn">Button</span><span class="pun">({</span> <span class="var">label</span><span class="pun">,</span> <span class="var">onClick</span><span class="pun">,</span> <span class="var">disabled</span> <span class="op">=</span> <span class="kw">false</span> <span class="pun">}:</span> <span class="type">ButtonProps</span><span class="pun">) {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;button</span> <span class="attr">onClick</span><span class="pun">={</span><span class="var">onClick</span><span class="pun">}</span> <span class="attr">disabled</span><span class="pun">={</span><span class="var">disabled</span><span class="pun">}</span><span class="tag">&gt;</span>
+      <span class="pun">{</span><span class="var">label</span><span class="pun">}</span>
+    <span class="tag">&lt;/button&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// TypeScript + useState</span>
+<span class="kw">function</span> <span class="fn">App</span><span class="pun">() {</span>
+  <span class="kw">const</span> <span class="pun">[</span><span class="var">count</span><span class="pun">,</span> <span class="var">setCount</span><span class="pun">]</span> <span class="op">=</span> <span class="fn">useState</span><span class="pun">&lt;</span><span class="type">number</span><span class="pun">&gt;(</span><span class="num">0</span><span class="pun">);</span>
+
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;Button</span>
+      <span class="attr">label</span><span class="pun">=</span><span class="str">"Click me"</span>
+      <span class="attr">onClick</span><span class="pun">={() =></span> <span class="fn">setCount</span><span class="pun">(</span><span class="var">count</span> <span class="op">+</span> <span class="num">1</span><span class="pun">)}</span>
+    <span class="tag">/&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <!-- REACT PRACTICE -->
+  <div class="chapter">
+    <span class="chapter-num">04</span>
+    <h2>Practice: React Components</h2>
+  </div>
+
+  <div class="practice-card">
+    <div class="practice-header">
+      <div class="practice-title">✏️ Exercise 4 — Build a Toggle Component</div>
+    </div>
+    <div class="practice-body">
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-js">Requirements</div>
+        <div class="practice-answer" style="border-right:1px solid var(--border)"><span class="cmt">// Create a Toggle component that:</span>
+<span class="cmt">// - Has state: isOn (starts false)</span>
+<span class="cmt">// - Shows "ON" or "OFF" based on state</span>
+<span class="cmt">// - Has a button that flips the state</span>
+<span class="cmt">// - The button text changes too:</span>
+<span class="cmt">//   "Turn On" when off, "Turn Off" when on</span></div>
+      </div>
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-ts">Your React Code</div>
+        <textarea class="practice-editor" id="ex4-input" spellcheck="false" placeholder="function Toggle() {
+  const [isOn, setIsOn] = useState(false);
+
+  return (
+    // your JSX here...
+  );
+}"></textarea>
+      </div>
+    </div>
+    <div class="practice-footer">
+      <button class="btn btn-reveal" onclick="toggleAnswer('ex4')">👁 Reveal Answer</button>
+    </div>
+    <div id="ex4-answer" style="display:none">
+      <div class="practice-pane-label pane-ts" style="border-top:1px solid var(--border)">✅ Answer</div>
+      <div class="practice-answer" style="padding:1rem 1.4rem"><span class="kw">import</span> <span class="pun">{</span> <span class="var">useState</span> <span class="pun">}</span> <span class="kw">from</span> <span class="str">'react'</span><span class="pun">;</span>
+
+<span class="kw">function</span> <span class="fn">Toggle</span><span class="pun">() {</span>
+  <span class="kw">const</span> <span class="pun">[</span><span class="var">isOn</span><span class="pun">,</span> <span class="var">setIsOn</span><span class="pun">]</span> <span class="op">=</span> <span class="fn">useState</span><span class="pun">(</span><span class="kw">false</span><span class="pun">);</span>
+
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div&gt;</span>
+      <span class="tag">&lt;p&gt;</span>Status: <span class="pun">{</span><span class="var">isOn</span> <span class="op">?</span> <span class="str">'ON'</span> <span class="op">:</span> <span class="str">'OFF'</span><span class="pun">}</span><span class="tag">&lt;/p&gt;</span>
+      <span class="tag">&lt;button</span> <span class="attr">onClick</span><span class="pun">={() =></span> <span class="fn">setIsOn</span><span class="pun">(!</span><span class="var">isOn</span><span class="pun">)}</span><span class="tag">&gt;</span>
+        <span class="pun">{</span><span class="var">isOn</span> <span class="op">?</span> <span class="str">'Turn Off'</span> <span class="op">:</span> <span class="str">'Turn On'</span><span class="pun">}</span>
+      <span class="tag">&lt;/button&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span></div>
+    </div>
+  </div>
+
+  <div class="practice-card">
+    <div class="practice-header">
+      <div class="practice-title">✏️ Exercise 5 — Typed React Component</div>
+    </div>
+    <div class="practice-body">
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-js">Requirements (React + TypeScript)</div>
+        <div class="practice-answer" style="border-right:1px solid var(--border)"><span class="cmt">// Create a "TaskCard" component with:</span>
+<span class="cmt">// Props interface:</span>
+<span class="cmt">//   - title: string (required)</span>
+<span class="cmt">//   - priority: 'low' | 'medium' | 'high'</span>
+<span class="cmt">//   - completed?: boolean (optional)</span>
+
+<span class="cmt">// The component renders:</span>
+<span class="cmt">// - A div with the title</span>
+<span class="cmt">// - Priority badge</span>
+<span class="cmt">// - Strikethrough text if completed</span></div>
+      </div>
+      <div class="practice-pane">
+        <div class="practice-pane-label pane-ts">Your React + TypeScript</div>
+        <textarea class="practice-editor" id="ex5-input" spellcheck="false" placeholder="interface TaskCardProps {
+  ...
+}
+
+function TaskCard({ ... }: TaskCardProps) {
+  return (
+    ...
+  );
+}"></textarea>
+      </div>
+    </div>
+    <div class="practice-footer">
+      <button class="btn btn-reveal" onclick="toggleAnswer('ex5')">👁 Reveal Answer</button>
+    </div>
+    <div id="ex5-answer" style="display:none">
+      <div class="practice-pane-label pane-ts" style="border-top:1px solid var(--border)">✅ Answer</div>
+      <div class="practice-answer" style="padding:1rem 1.4rem"><span class="kw">interface</span> <span class="type">TaskCardProps</span> <span class="pun">{</span>
+  <span class="prop">title</span><span class="pun">:</span> <span class="type">string</span><span class="pun">;</span>
+  <span class="prop">priority</span><span class="pun">:</span> <span class="str">'low'</span> <span class="op">|</span> <span class="str">'medium'</span> <span class="op">|</span> <span class="str">'high'</span><span class="pun">;</span>
+  <span class="prop">completed</span><span class="pun">?:</span> <span class="type">boolean</span><span class="pun">;</span>
+<span class="pun">}</span>
+
+<span class="kw">function</span> <span class="fn">TaskCard</span><span class="pun">({ </span><span class="var">title</span><span class="pun">,</span> <span class="var">priority</span><span class="pun">,</span> <span class="var">completed</span> <span class="op">=</span> <span class="kw">false</span> <span class="pun">}:</span> <span class="type">TaskCardProps</span><span class="pun">) {</span>
+  <span class="kw">return</span> <span class="pun">(</span>
+    <span class="tag">&lt;div</span> <span class="attr">style</span><span class="pun">={{</span> <span class="prop">opacity</span><span class="pun">:</span> <span class="var">completed</span> <span class="op">?</span> <span class="num">0.5</span> <span class="op">:</span> <span class="num">1</span> <span class="pun">}}</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;h3</span> <span class="attr">style</span><span class="pun">={{</span> <span class="prop">textDecoration</span><span class="pun">:</span> <span class="var">completed</span> <span class="op">?</span> <span class="str">'line-through'</span> <span class="op">:</span> <span class="str">'none'</span> <span class="pun">}}</span><span class="tag">&gt;</span>
+        <span class="pun">{</span><span class="var">title</span><span class="pun">}</span>
+      <span class="tag">&lt;/h3&gt;</span>
+      <span class="tag">&lt;span&gt;</span>Priority: <span class="pun">{</span><span class="var">priority</span><span class="pun">}</span><span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="pun">);</span>
+<span class="pun">}</span>
+
+<span class="cmt">// Usage:</span>
+<span class="tag">&lt;TaskCard</span> <span class="attr">title</span><span class="pun">=</span><span class="str">"Learn React"</span> <span class="attr">priority</span><span class="pun">=</span><span class="str">"high"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;TaskCard</span> <span class="attr">title</span><span class="pun">=</span><span class="str">"Fix bug"</span> <span class="attr">priority</span><span class="pun">=</span><span class="str">"medium"</span> <span class="attr">completed</span><span class="pun">={</span><span class="kw">true</span><span class="pun">}</span> <span class="tag">/&gt;</span></div>
+    </div>
+  </div>
+
+  <!-- REACT QUIZ -->
+  <div class="chapter">
+    <span class="chapter-num">05</span>
+    <h2>React Quiz</h2>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — useState</div>
+    <div class="quiz-question">You have <code style="font-family:JetBrains Mono">const [name, setName] = useState('Alice')</code>. How do you update the name to 'Bob'?</div>
+    <div class="quiz-options" id="q7-opts">
+      <button class="quiz-option" onclick="checkQuiz('q7',this,false,'A')"><span class="opt-letter">A</span><code style="font-family:JetBrains Mono">name = 'Bob'</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q7',this,true,'B')"><span class="opt-letter">B</span><code style="font-family:JetBrains Mono">setName('Bob')</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q7',this,false,'C')"><span class="opt-letter">C</span><code style="font-family:JetBrains Mono">useState('Bob')</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q7',this,false,'D')"><span class="opt-letter">D</span><code style="font-family:JetBrains Mono">this.name = 'Bob'</code></button>
+    </div>
+    <div class="quiz-feedback" id="q7-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — Props</div>
+    <div class="quiz-question">What are "props" in React?</div>
+    <div class="quiz-options" id="q8-opts">
+      <button class="quiz-option" onclick="checkQuiz('q8',this,false,'A')"><span class="opt-letter">A</span>CSS properties applied to components</button>
+      <button class="quiz-option" onclick="checkQuiz('q8',this,false,'B')"><span class="opt-letter">B</span>Internal data that a component tracks itself</button>
+      <button class="quiz-option" onclick="checkQuiz('q8',this,true,'C')"><span class="opt-letter">C</span>Data passed from a parent component to a child component</button>
+      <button class="quiz-option" onclick="checkQuiz('q8',this,false,'D')"><span class="opt-letter">D</span>A way to import external libraries</button>
+    </div>
+    <div class="quiz-feedback" id="q8-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — useEffect</div>
+    <div class="quiz-question">What does an empty dependency array <code style="font-family:JetBrains Mono">[]</code> mean in <code style="font-family:JetBrains Mono">useEffect</code>?</div>
+    <div class="quiz-options" id="q9-opts">
+      <button class="quiz-option" onclick="checkQuiz('q9',this,false,'A')"><span class="opt-letter">A</span>The effect never runs</button>
+      <button class="quiz-option" onclick="checkQuiz('q9',this,true,'B')"><span class="opt-letter">B</span>The effect runs once, when the component first mounts</button>
+      <button class="quiz-option" onclick="checkQuiz('q9',this,false,'C')"><span class="opt-letter">C</span>The effect runs after every render</button>
+      <button class="quiz-option" onclick="checkQuiz('q9',this,false,'D')"><span class="opt-letter">D</span>The effect runs only when the component unmounts</button>
+    </div>
+    <div class="quiz-feedback" id="q9-fb"></div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="icon icon-quiz">🧠</span>Quiz — JSX</div>
+    <div class="quiz-question">In JSX, how do you output a JavaScript variable called <code style="font-family:JetBrains Mono">username</code> inside HTML?</div>
+    <div class="quiz-options" id="q10-opts">
+      <button class="quiz-option" onclick="checkQuiz('q10',this,false,'A')"><span class="opt-letter">A</span><code style="font-family:JetBrains Mono">&lt;p&gt;{{ username }}&lt;/p&gt;</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q10',this,true,'B')"><span class="opt-letter">B</span><code style="font-family:JetBrains Mono">&lt;p&gt;{username}&lt;/p&gt;</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q10',this,false,'C')"><span class="opt-letter">C</span><code style="font-family:JetBrains Mono">&lt;p&gt;$(username)&lt;/p&gt;</code></button>
+      <button class="quiz-option" onclick="checkQuiz('q10',this,false,'D')"><span class="opt-letter">D</span><code style="font-family:JetBrains Mono">&lt;p&gt;%username%&lt;/p&gt;</code></button>
+    </div>
+    <div class="quiz-feedback" id="q10-fb"></div>
+  </div>
+
+  <!-- FINAL SECTION -->
+  <div class="section-end" style="background:linear-gradient(135deg,#0e1318,#0d1a2a);border-color:#00e5ff33">
+    <div style="font-size:2.5rem;margin-bottom:1rem">🎉</div>
+    <h3 style="color:var(--accent);font-size:1.5rem">You've completed the guide!</h3>
+    <p style="margin-bottom:0.5rem">You now understand the core pillars of modern frontend development:</p>
+    <div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin:1rem 0">
+      <span class="hero-badge badge-npm" style="font-size:0.9rem;padding:0.5rem 1rem">📦 npm</span>
+      <span class="hero-badge badge-ts" style="font-size:0.9rem;padding:0.5rem 1rem">🔷 TypeScript</span>
+      <span class="hero-badge badge-react" style="font-size:0.9rem;padding:0.5rem 1rem">⚛ React</span>
+    </div>
+    <p style="color:var(--text-dim);font-size:0.88rem">Your score: <span id="finalScore" style="color:var(--accent3);font-weight:700"></span></p>
+    <button class="next-btn" onclick="switchTab('npm')" style="background:var(--bg3);color:var(--text-bright);margin-top:1rem">↩ Start Over</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ======= STATE =======
+let score = 0;
+let total = 0;
+let counterVal = 0;
+
+// ======= TAB SWITCHING =======
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateProgress();
+}
+
+// ======= QUIZ =======
+const feedbacks = {
+  q1: { correct: "✅ Correct! <code>--save-dev</code> (or <code>-D</code>) saves to <code>devDependencies</code> in package.json.", wrong: "❌ Not quite. The <code>--save-dev</code> flag is what marks a package as a dev-only dependency." },
+  q2: { correct: "✅ Exactly! The lock file freezes exact versions, ensuring reproducible installs across machines and CI/CD.", wrong: "❌ Not quite. The lock file is about reproducibility — ensuring the same exact package versions everywhere." },
+  q3: { correct: "✅ Right! Browsers can't resolve npm modules directly. A bundler processes your code and all its dependencies into something the browser understands.", wrong: "❌ The main reason is that browsers can't use npm's module resolution system directly." },
+  q4: { correct: "✅ Correct! TypeScript infers the type as <code>number</code> from the literal value <code>5</code>.", wrong: "❌ TypeScript looks at the value and infers <code>number</code> automatically — this is called type inference." },
+  q5: { correct: "✅ Yes! The <code>?</code> after the property name makes it optional.", wrong: "❌ The syntax is <code>propertyName?: type</code> — the question mark goes right after the name." },
+  q6: { correct: "✅ The <code>|</code> operator creates a union type — the variable can be either type.", wrong: "❌ Union types use the <code>|</code> (pipe) operator: <code>string | number</code>." },
+  q7: { correct: "✅ Perfect! Always use the setter function. Never mutate state directly.", wrong: "❌ In React, you must use the setter function. Direct assignment won't trigger a re-render." },
+  q8: { correct: "✅ Exactly! Props flow downward: parent → child. They're read-only in the child.", wrong: "❌ Props are data passed from parent to child components, like arguments to a function." },
+  q9: { correct: "✅ Correct! Empty <code>[]</code> means 'run once on mount' — perfect for initial data fetching.", wrong: "❌ An empty dependency array means the effect runs once when the component first appears in the DOM." },
+  q10: { correct: "✅ Right! Single curly braces <code>{}</code> in JSX let you write any JavaScript expression.", wrong: "❌ In JSX, use single curly braces: <code>{variableName}</code>. Double curly is used for style objects." }
+};
+
+function checkQuiz(id, btn, isCorrect, letter) {
+  const opts = document.getElementById(id + '-opts');
+  if (opts.querySelector('.correct, .wrong')) return; // already answered
+  
+  total++;
+  const fb = document.getElementById(id + '-fb');
+  
+  if (isCorrect) {
+    score++;
+    btn.classList.add('correct');
+    fb.className = 'quiz-feedback show correct-fb';
+    fb.innerHTML = feedbacks[id].correct;
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'quiz-feedback show wrong-fb';
+    fb.innerHTML = feedbacks[id].wrong;
+    // highlight correct answer
+    opts.querySelectorAll('.quiz-option').forEach(o => {
+      if (o.onclick.toString().includes('true')) o.classList.add('correct');
+    });
+  }
+  
+  opts.querySelectorAll('.quiz-option').forEach(o => o.disabled = true);
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('totalNum').textContent = total;
+  document.getElementById('finalScore').textContent = score + ' / ' + total;
+}
+
+// ======= PRACTICE =======
+function toggleAnswer(id) {
+  const ans = document.getElementById(id + '-answer');
+  ans.style.display = ans.style.display === 'none' ? 'block' : 'none';
+}
+
+// ======= COUNTER DEMO =======
+function updateCounter(delta) {
+  counterVal += delta;
+  const display = document.getElementById('counter-display');
+  display.textContent = counterVal;
+  display.style.color = counterVal > 0 ? 'var(--accent3)' : counterVal < 0 ? 'var(--error)' : 'var(--react)';
+  document.getElementById('counter-state').textContent = counterVal;
+  
+  // flash effect
+  display.style.transform = 'scale(1.2)';
+  setTimeout(() => display.style.transform = 'scale(1)', 150);
+}
+
+// ======= COPY CODE =======
+function copyCode(btn) {
+  const block = btn.closest('.code-block').querySelector('.code-content');
+  const text = block.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.color = 'var(--success)';
+    setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 1500);
+  });
+}
+
+// ======= PROGRESS =======
+function updateProgress() {
+  const sections = ['npm', 'typescript', 'react'];
+  const active = document.querySelector('.section.active').id.replace('section-', '');
+  const idx = sections.indexOf(active);
+  document.getElementById('progressBar').style.width = ((idx + 1) / sections.length * 100) + '%';
+}
+
+// ======= INIT =======
+updateProgress();
+updateScore();
+
+// Keyboard shortcut: 1/2/3 to switch tabs
+document.addEventListener('keydown', e => {
+  if (e.key === '1') switchTab('npm');
+  if (e.key === '2') switchTab('typescript');
+  if (e.key === '3') switchTab('react');
+});
+</script>
+</body>
+</html>
